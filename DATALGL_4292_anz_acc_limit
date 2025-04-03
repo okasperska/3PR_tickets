@@ -1,0 +1,197 @@
+--select * from ap_raw_green.green.raw_c_e_rulesenginekarma_decision_value_change where consumer_uuid = '6bf45587-b46b-4122-a92d-09b4e2d54e98'
+
+
+USE WAREHOUSE ADHOC__XLARGE;
+CREATE OR REPLACE table  PERSONAL_OKASPERSKA.public.anz_limits as
+(
+with BASE as 
+(
+select dc.id consumer_id,
+dc.country_code,
+dc.uuid consumer_uuid,
+dc.created_date acc_created_date,
+lim.ACCOUNT_LIMIT_AMOUNT acc_limit_31march,
+max(order_date) as recent_order_date
+from ap_raw_green.green.d_consumer dc
+left join AP_CUR_RISKFEC_G.credit.cust_limit_daily_prod_au lim
+on dc.uuid = lim.consumer_uuid and to_date(lim.batch_dttm) = '2025-03-31'
+left join ap_raw_green.green.f_order fo
+on dc.id = fo.consumer_id and fo.order_date <= '2025-03-31'
+where dc.country_code in ('AU', 'NZ')
+and dc.created_date <= '2025-03-31'
+group by 1,2,3,4,5
+)
+
+,                               ACC_CLOSED_DATES_STG AS -- dates when a consumer account was closed with balance due to bankruptcy, ATO etc
+                                (
+                                select a.consumer_id, b.uuid consumer_uuid, max(a.created_date) closed_date, max(a.created_datetime) closed_datetime
+                                from ap_raw_green.green.f_consumer_note a
+                                join ap_raw_green.green.d_consumer b
+                                on a.consumer_id = b.id
+                                where 1=1 
+                                and b.country_code in ('AU', 'NZ')
+                                and ((note LIKE '%to ''CLOSED''%' AND note LIKE '%Status changed from%') or note like '%Account closed/disabled%')
+                                and a.created_date <= '2025-03-31'
+                                group by 1,2
+                                )
+        
+                                ,ACC_REINSTATED_DATES AS -- limited cases when an account gets reinstated when disputed liability is withdrawn
+                                (
+                                select a.consumer_id, b.uuid consumer_uuid, max(a.created_datetime) reinst_datetime
+                                from ap_raw_green.green.f_consumer_note a
+                                join ap_raw_green.green.d_consumer b
+                                on a.consumer_id = b.id
+                                where 1=1 
+                                and b.country_code in ('AU', 'NZ')
+                               and ((note LIKE '%to ''REGISTERED''%' AND note LIKE '%Status changed from%') or (note LIKE '%to REGISTERED%' AND note LIKE '%Status Change from%'))
+                                and a.created_date <= '2025-03-31'
+                                group by 1,2
+                                )
+
+, ACC_CLOSED_DATES AS
+(
+select a.consumer_id, a.consumer_uuid, a.closed_date
+from ACC_CLOSED_DATES_STG a
+left join ACC_REINSTATED_DATES b
+on a.consumer_id = b.consumer_id
+WHERE b.reinst_datetime is null or b.reinst_datetime < a.closed_datetime
+)
+
+, ACC_WRITTEN_OFF_DATES AS -- dates when an order was written off based on 180DO rule
+(
+select 
+wo.consumer_id,
+max(wo.event_date) wo_date
+from AP_RAW_GREEN.GREEN.F_WRITE_OFF_EVENTS wo
+where wo.event_type = 'Write Off'
+and wo.write_off_event_source in ('Payment','Late Fee')
+and wo.gdp_region = 'AU'
+and wo.event_date <= '2025-03-31'
+group by 1
+)
+, SELF_EXCLUDE as
+(
+select * from
+                        (
+                        select 
+                        a.CONSUMER_ACCOUNT_REFERENCE_CONSUMER_ID consumer_id, 
+                        to_date(case when b.country_code = 'AU' then  (convert_timezone('UTC', 'Australia/Melbourne', a.EVENT_INFO_EVENT_TIME))
+                                     when b.country_code = 'NZ' then  (convert_timezone('UTC', 'Pacific/Auckland', a.EVENT_INFO_EVENT_TIME))
+                                     else null end) as status_change_date,
+                        STATUS_CHANGED_TO,
+                        row_number() over (partition by a.CONSUMER_ACCOUNT_REFERENCE_CONSUMER_ID order by a.EVENT_INFO_EVENT_TIME desc) rnk 
+                        FROM AP_RAW_GREEN.GREEN.RAW_C_E_CONSUMER_SELF_EXCLUSION a
+                        JOIN AP_RAW_GREEN.GREEN.d_consumer b
+                        on a.CONSUMER_ACCOUNT_REFERENCE_CONSUMER_ID = b.id
+                        where b.country_code in ('AU', 'NZ')
+                        and status_change_date <= '2025-03-31'
+                        )
+where rnk = 1
+)
+
+, STAGING as
+(
+select
+base.country_code,
+base.consumer_id,
+base.consumer_uuid,
+base.acc_created_date,
+base.acc_limit_31march,
+base.recent_order_date,
+cl.closed_date,
+wo.wo_date,
+se.status_changed_to
+from base
+left join acc_closed_dates cl
+on base.consumer_uuid = cl.consumer_uuid
+left join acc_written_off_dates wo
+on base.consumer_id = wo.consumer_id
+left join self_exclude se
+on base.consumer_id = se.consumer_id
+
+)
+
+SELECT
+country_code,
+consumer_id,
+consumer_uuid,
+acc_created_date,
+case when country_code = 'AU' and acc_limit_31march is null then 600
+     when country_code = 'NZ' and acc_limit_31march is null then 200
+     else acc_limit_31march end as acc_limit_31march_min,
+     
+case when country_code = 'AU' and acc_limit_31march is null then 600
+     when country_code = 'NZ' and acc_limit_31march is null then 1200
+     else acc_limit_31march end as acc_limit_31march_max,     
+
+case when recent_order_date is not null then 'Y' else 'N' end as ever_active_flag,
+
+case when recent_order_date between '2024-04-01' and '2025-03-31' then 'Y' else 'N' end as M12_active_flag,
+
+case when closed_date is null then 'N' else 'Y' end as acc_closed_flag,
+
+case when wo_date is null then 'N' else 'Y' end as acc_wo_flag,
+
+case when status_changed_to in ('DEACTIVATED','ACCOUNT_CLOSED') then 'Y'
+     when (status_changed_to in ('REACTIVATED','ACCOUNT_REOPENED') or status_changed_to is null) then 'N'
+     else null end as self_exclusion_flag
+FROM STAGING
+);
+
+
+---detailed data pull
+SELECT
+country_code,
+ever_active_flag,
+m12_active_flag,
+acc_closed_flag,
+acc_wo_flag,
+self_exclusion_flag,
+acc_limit_31march_min,
+acc_limit_31march_max,
+count(distinct consumer_uuid) consumer_cnt,
+acc_limit_31march_max*consumer_cnt as total_max_limit,
+acc_limit_31march_min*consumer_cnt as total_min_limit
+from  PERSONAL_OKASPERSKA.public.anz_limits
+group by 1,2,3,4,5,6,7,8
+order by 1,2,6,3,4,5
+
+
+--- summary data pull
+
+with base as
+(
+SELECT
+country_code,
+ever_active_flag,
+m12_active_flag,
+acc_closed_flag,
+acc_wo_flag,
+self_exclusion_flag,
+acc_limit_31march_min,
+acc_limit_31march_max,
+count(distinct consumer_uuid) consumer_cnt,
+acc_limit_31march_max*consumer_cnt as total_max_limit,
+acc_limit_31march_min*consumer_cnt as total_min_limit
+from  PERSONAL_OKASPERSKA.public.anz_limits
+where acc_closed_flag = 'N'
+and acc_wo_flag = 'N'
+and self_exclusion_flag = 'N'
+group by 1,2,3,4,5,6,7,8
+order by 1,2,3,4,5,6,7,8
+)
+
+SELECT
+country_code,
+ever_active_flag,
+m12_active_flag,
+acc_closed_flag,
+acc_wo_flag,
+self_exclusion_flag,
+sum(consumer_cnt) consumer_cnt,
+sum(total_max_limit) total_max_limit,
+sum(total_min_limit) total_min_limit
+from base
+group by 1,2,3,4,5,6
+order by 1,2,3,4,5,6
+
