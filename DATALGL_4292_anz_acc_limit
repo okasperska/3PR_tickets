@@ -1,6 +1,3 @@
---select * from ap_raw_green.green.raw_c_e_rulesenginekarma_decision_value_change where consumer_uuid = '6bf45587-b46b-4122-a92d-09b4e2d54e98'
-
-
 USE WAREHOUSE ADHOC__XLARGE;
 CREATE OR REPLACE table  PERSONAL_OKASPERSKA.public.anz_limits as
 (
@@ -117,12 +114,9 @@ consumer_id,
 consumer_uuid,
 acc_created_date,
 case when country_code = 'AU' and acc_limit_31march is null then 600
-     when country_code = 'NZ' and acc_limit_31march is null then 200
-     else acc_limit_31march end as acc_limit_31march_min,
-     
-case when country_code = 'AU' and acc_limit_31march is null then 600
-     when country_code = 'NZ' and acc_limit_31march is null then 1200
-     else acc_limit_31march end as acc_limit_31march_max,     
+     when country_code = 'NZ' and acc_limit_31march is null and acc_created_date < '2024-06-23' then 600 
+     when country_code = 'NZ' and acc_limit_31march is null and acc_created_date >= '2024-06-23' then null 
+     else acc_limit_31march end as acc_limit_31march,            
 
 case when recent_order_date is not null then 'Y' else 'N' end as ever_active_flag,
 
@@ -147,13 +141,11 @@ m12_active_flag,
 acc_closed_flag,
 acc_wo_flag,
 self_exclusion_flag,
-acc_limit_31march_min,
-acc_limit_31march_max,
+acc_limit_31march,
 count(distinct consumer_uuid) consumer_cnt,
-acc_limit_31march_max*consumer_cnt as total_max_limit,
-acc_limit_31march_min*consumer_cnt as total_min_limit
+acc_limit_31march * consumer_cnt as total_limit
 from  PERSONAL_OKASPERSKA.public.anz_limits
-group by 1,2,3,4,5,6,7,8
+group by 1,2,3,4,5,6,7
 order by 1,2,6,3,4,5
 
 
@@ -168,17 +160,15 @@ m12_active_flag,
 acc_closed_flag,
 acc_wo_flag,
 self_exclusion_flag,
-acc_limit_31march_min,
-acc_limit_31march_max,
+acc_limit_31march,
 count(distinct consumer_uuid) consumer_cnt,
-acc_limit_31march_max*consumer_cnt as total_max_limit,
-acc_limit_31march_min*consumer_cnt as total_min_limit
+acc_limit_31march * consumer_cnt as total_limit
 from  PERSONAL_OKASPERSKA.public.anz_limits
 where acc_closed_flag = 'N'
 and acc_wo_flag = 'N'
 and self_exclusion_flag = 'N'
-group by 1,2,3,4,5,6,7,8
-order by 1,2,3,4,5,6,7,8
+group by 1,2,3,4,5,6,7
+order by 1,2,3,4,5,6,7
 )
 
 SELECT
@@ -189,8 +179,7 @@ acc_closed_flag,
 acc_wo_flag,
 self_exclusion_flag,
 sum(consumer_cnt) consumer_cnt,
-sum(total_max_limit) total_max_limit,
-sum(total_min_limit) total_min_limit
+sum(total_limit) total_min_limit
 from base
 group by 1,2,3,4,5,6
 order by 1,2,3,4,5,6
