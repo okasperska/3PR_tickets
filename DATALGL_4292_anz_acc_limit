@@ -113,7 +113,8 @@ country_code,
 consumer_id,
 consumer_uuid,
 acc_created_date,
-case when country_code = 'AU' and acc_limit_31march is null then 600
+case when country_code = 'AU' and acc_limit_31march is null and acc_created_date < '2025-06-09' then 600 
+     when country_code = 'AU' and acc_limit_31march is null and acc_created_date >= '2025-06-10' then null
      when country_code = 'NZ' and acc_limit_31march is null and acc_created_date < '2024-06-23' then 600 
      when country_code = 'NZ' and acc_limit_31march is null and acc_created_date >= '2024-06-23' then null 
      else acc_limit_31march end as acc_limit_31march,            
