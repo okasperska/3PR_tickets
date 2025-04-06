@@ -1,3 +1,6 @@
+--select * from ap_raw_green.green.raw_c_e_rulesenginekarma_decision_value_change where consumer_uuid = '6bf45587-b46b-4122-a92d-09b4e2d54e98'
+
+
 USE WAREHOUSE ADHOC__XLARGE;
 CREATE OR REPLACE table  PERSONAL_OKASPERSKA.public.anz_limits as
 (
@@ -115,8 +118,8 @@ consumer_uuid,
 acc_created_date,
 case when country_code = 'AU' and acc_limit_31march is null and acc_created_date < '2025-06-09' then 600 
      when country_code = 'AU' and acc_limit_31march is null and acc_created_date >= '2025-06-10' then null
-     when country_code = 'NZ' and acc_limit_31march is null and acc_created_date < '2024-06-23' then 600 
-     when country_code = 'NZ' and acc_limit_31march is null and acc_created_date >= '2024-06-23' then null 
+     when country_code = 'NZ' and acc_limit_31march is null and acc_created_date < '2024-07-23' then 600 
+     when country_code = 'NZ' and acc_limit_31march is null and acc_created_date >= '2024-07-23' then null 
      else acc_limit_31march end as acc_limit_31march,            
 
 case when recent_order_date is not null then 'Y' else 'N' end as ever_active_flag,
@@ -184,4 +187,3 @@ sum(total_limit) total_min_limit
 from base
 group by 1,2,3,4,5,6
 order by 1,2,3,4,5,6
-
