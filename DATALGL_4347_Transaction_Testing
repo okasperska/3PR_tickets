@@ -6,6 +6,7 @@ DOWNPAYMENT_MISMATCH,
 count(application_id),
 from AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING
 where application_id not in (select order_token from app_cash_3pr.afterpay.test_attempt_exclusions)
+and application_date between '2025-03-01' and '2025-03-31'
 group by 1
 
 
