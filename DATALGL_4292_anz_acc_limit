@@ -1,4 +1,3 @@
---select * from ap_raw_green.green.raw_c_e_rulesenginekarma_decision_value_change where consumer_uuid = '6bf45587-b46b-4122-a92d-09b4e2d54e98'
 
 
 --CREATE OR REPLACE table  PERSONAL_OKASPERSKA.public.anz_limits_start as (select * from PERSONAL_OKASPERSKA.public.anz_limits_end)
@@ -14,8 +13,8 @@ macro_variables as
 (
 SELECT
    
---'2025-02-28' ::DATE as end_dte
-'2024-07-31' ::DATE as end_dte
+
+'2025-03-31' ::DATE as end_dte
      
 )
 
