@@ -71,7 +71,7 @@ order_token,
 consumer_uuid, 
 application_date
 from c_base
-where decline_main_sub_reason in ('MAIN_SUB_REASON_EMPTY') -- signifies approved loans
+where decision_status = 'APPROVED' -- signifies approved loans
 order by application_date
 ),
 
