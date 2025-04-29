@@ -1,0 +1,112 @@
+
+---VOIDED IN FULL
+with v_base as 
+(
+select --a.id order_id,
+a.order_token,
+c.uuid consumer_uuid,
+a.order_date application_date,
+a.order_amount,
+--b.created_date,
+sum(b.amount) voided_amount
+from ap_raw_green.green.f_order a
+left join ap_raw_green.green.f_order_payment_event b
+on a.id = b.order_id
+join ap_raw_green.green.d_consumer c
+on a.consumer_id = c.id
+where a.order_transaction_status = 'Approved'
+and a.payment_type = 'PCL'
+and a.order_date between '2024-04-01' and '2024-06-30'
+--and a.order_date = b.created_date
+and b.ORDER_PAYMENT_EVENT_TYPE_DESC in ('VOIDED')
+and a.country_code = 'US'
+group by 1,2,3,4
+),
+
+VOIDED as
+
+(
+select order_token, 
+consumer_uuid, 
+application_date,
+'VOIDED' as dropout_reason
+from v_base
+where order_amount = voided_amount
+),
+
+
+----APPROVED by credit risk but declined later
+
+
+C_BASE as --- taken straight from project evolution code
+( select * from
+        (select order_token, 
+        consumer_uuid,
+        KEY_EVENT_INFO_ID,
+        offers_loan_amount_amount,
+        key_event_info_event_time,
+        decision_status,
+        merchant_id,
+        offers_target_apr,
+        offers_term, 
+        offers_eligibility, 
+        credit_report_uuid, 
+        test_group, 
+        decline_main_reason,
+        decline_main_sub_reason,
+        cast(convert_timezone('UTC','America/Los_Angeles',dateadd('MS',created_date,'1970-01-01')) as date) as created_time,  
+        to_date(convert_timezone('UTC','America/Los_Angeles',key_event_info_event_time)) application_date,
+        ROW_NUMBER()OVER(PARTITION BY  consumer_uuid, created_time, merchant_id, decline_main_reason ORDER BY  KEY_EVENT_INFO_EVENT_TIME desc) as rnk --dedupping based on rules used in MQF prior to Q1 2025 to avoid confusion
+        -- ROW_NUMBER()OVER(PARTITION BY  order_token, consumer_uuid, decline_main_sub_reason ORDER BY  KEY_EVENT_INFO_EVENT_TIME asc) as rnk -- project evolution dedupping method
+        FROM AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.consumer_lending_decision
+        where country_code = 'US') 
+        WHERE rnk = 1  
+        and to_date(convert_timezone('UTC','America/Los_Angeles',key_event_info_event_time)) between '2024-04-01' and '2024-06-30'
+),
+
+CREDIT_DECLINES as 
+(                        
+select 
+order_token, 
+consumer_uuid, 
+application_date
+from c_base
+where decline_main_sub_reason in ('MAIN_SUB_REASON_EMPTY') -- signifies approved loans
+order by application_date
+),
+
+
+OTHER_DECLINES as
+(
+SELECT
+TRANSACTION_TOKEN,
+TRANSACTION_DATE,
+DROPOUT_REASON,
+UUID
+from AP_CUR_XOOP_G.PAY_MONTHLY.M_ATM_ATTEMPT_MASTER
+WHERE MERCHANT_COUNTRY = 'US'
+AND TRANSACTION_DATE BETWEEN '2024-04-01' and '2024-06-30'
+AND DROPOUT_REASON IN (
+'Invalid Payment details',
+'Insufficient Funds',
+'Risk - Fraud'
+,'Payment error'
+)
+AND STATUS_REASON NOT IN ('CROSS_COUNTRY_CARD_REJECTION','TOPAZ_PURCHASE_ENQUIRE_REJECTION')
+),
+
+further_declines as
+(
+select 
+a.order_token, 
+a.consumer_uuid, 
+a.application_date,
+b.DROPOUT_REASON
+from credit_declines a
+join other_declines b
+on a.consumer_uuid = b.uuid and a.order_token = b.transaction_token
+)
+
+--- FINAL OUTPUT 
+
+select * from voided union select * from further_declines
