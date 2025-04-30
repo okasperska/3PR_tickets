@@ -1,4 +1,4 @@
-
+--- TO GET ROBOCALL TIMESTAMP ONLY
 select order_token, consumer_consumer_uuid, 
 convert_timezone('UTC','America/Los_Angeles', event_info_event_time) as call_datetime, 
 robocall_result
