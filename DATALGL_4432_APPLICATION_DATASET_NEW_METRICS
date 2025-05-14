@@ -1,0 +1,239 @@
+Skip to main content
+Skip to editor
+Skip to results
+Site
+Worksheets
+current match. WHERE application_date = DATE_TRUNC('DAY', '{{ ds }}'::DATE - INTERVAL '3 DAYS') on line 254.
+710
+711
+712
+713
+714
+715
+716
+717
+718
+719
+720
+721
+722
+723
+724
+725
+726
+727
+728
+729
+730
+731
+732
+733
+734
+735
+736
+737
+738
+739
+740
+741
+742
+743
+744
+745
+746
+747
+748
+749
+750
+751
+752
+753
+754
+755
+756
+757
+758
+759
+760
+761
+762
+763
+764
+765
+766
+767
+768
+769
+770
+771
+772
+773
+774
+775
+776
+777
+778
+779
+780
+781
+782
+783
+784
+785
+786
+787
+788
+789
+790
+791
+792
+793
+794
+795
+796
+797
+798
+799
+800
+801
+802
+803
+804
+805
+806
+807
+808
+809
+810
+811
+812
+813
+814
+815
+816
+817
+818
+819
+820
+821
+822
+                                                    when sim.G2 =3 then 800
+                                                    when sim.G2 in (4,5,6,7,8,9,10) then 800 else null end         
+  
+                                         end as varchar)                                                                                                           AS RISK_EXPOSURE
+         ,  cast(bp_c_nbr_of_instalment_with_payment_decline_rt_d180 as varchar)                                                                                   AS BP_C_NBR_OF_INSTALMENT_WITH_PAYMENT_DECLINE_RT_D180
+         ,  cast(bp_c_nbr_of_days_since_latest_nsf as varchar)                                                                                                     AS BP_C_NBR_OF_DAYS_SINCE_LATEST_NSF
+         ,  cast(bureau.experian_credit_check_details_is_credit_check_hit as varchar)                                                                              AS EXPERIAN_NO_HIT
+         ,  cast(bureau.experian_credit_check_details_is_deceased as varchar)                                                                                      AS DECEASED
+         ,  cast(bureau.experian_credit_check_details_is_bankruptcy as varchar)                                                                                    AS ACTIVE_BANKRUPTCY
+         ,  cast(base.decline_main_reason as varchar)                                                                                                              AS DECLINE_REASON
+         ,  cast(bureau.vantage_v3_score as varchar)                                                                                                               AS VANTAGE_V3_SCORE
+         ,  cast(idv.idv_score as varchar)                                                                                                                         AS CVI_SCORE
+         ,  cast(idv.risk_indicators as varchar)                                                                                                                   AS RISK_INDICATOR
+         ,  cast(base.ec1_score as varchar)                                                                                                                        AS AFTERPAY_RISK_MODEL_SCORE
+         ,  cast(nullif(split_part(base.offers_down_payment_amount_amount, '\t', 1),'')::decimal(10,2) as varchar)                                                 AS DOWNPAYMENT
+         ,  'N/A'                                                                                                                                                  AS BASE_LAYER_APR
+         ,  base.strategy_version_id                                                                                                                               AS STRATEGY_VERSION
+         ,  cast(base.cl_total_outstanding_principal as varchar)                                                                                                   AS CL_TOTAL_OUTSTANDING_PRINCIPAL
+         ,  cast(COALESCE(base.BP_C_LATEST_CREDIT_MODEL_V2_SCORE,base.SP_C_LATEST_CREDIT_MODEL_V2_SCORE) as varchar)                                               AS AP_INTERNAL_SCORE
+         ,  cast(sim.G1 as varchar)                                                                                                                                AS G1
+         ,  cast(sim.G2 as varchar)                                                                                                                                AS G2
+         ,  cast(sim.G3 as varchar)                                                                                                                                AS G3
+         , 'Pass' as LEXIS_NEXIS        
+    FROM base
+             LEFT JOIN dc_green
+                       ON base.consumer_uuid = dc_green.uuid
+             LEFT JOIN dc_red
+                       ON dc_green.id = dc_red.id
+             LEFT JOIN bureau
+                       ON base.credit_report_uuid = bureau.key_credit_report_uuid
+             LEFT JOIN aan
+                       ON base.consumer_uuid = aan.consumer_uuid AND base.order_token = aan.order_token AND aan.decline_main_sub_reason = base.decline_main_sub_reason
+             LEFT JOIN idv
+                       ON base.consumer_uuid = idv.consumer_uuid AND base.order_token = idv.order_token
+             LEFT JOIN loans
+                       ON base.order_token = loans.token AND base.consumer_uuid = loans.consumer_consumer_uuid AND base.decision_status = 'APPROVED'
+             LEFT JOIN principal
+                       ON loans.loan_details_loan_id = principal.key_loan_id
+             LEFT JOIN invoiced
+                       ON base.order_token = invoiced.order_token AND base.decision_status = 'APPROVED'
+             LEFT JOIN xo
+                       ON base.order_token = xo.transaction_token AND base.consumer_uuid = xo.uuid AND xo.transaction_date = base.application_date AND base.decision_status = 'APPROVED'
+             LEFT JOIN fsc1
+                       ON base.order_token = fsc1.order_token AND base.consumer_uuid = fsc1.consumer_id
+             LEFT JOIN fsc2
+                       ON base.order_token = fsc2.order_token AND base.consumer_uuid = fsc2.consumer_id
+             LEFT JOIN ap_raw_green.green.d_merchant merch
+                       ON base.merchant_id = merch.id
+             LEFT JOIN ap_cur_crdrisk_g.curated_credit_risk_green.cl_v12ec_strategysimulation sim
+                    ON base.order_token = sim.order_token AND base.key_event_info_event_time = sim.event_info_time
+    );
+
+
+CREATE OR REPLACE TABLE cash_3pr_pii.afterpay.feb_de_applications_daily AS
+(
+    WITH
+        base AS (
+            SELECT *
+            FROM cash_3pr_pii.afterpay.feb_de_applications_idv
+            UNION
+            SELECT *
+            FROM cash_3pr_pii.afterpay.feb_de_applications_crd
+            )
+    SELECT *
+         , CURRENT_TIMESTAMP AS report_generated_date
+    FROM base
+    );
+
+CREATE TABLE IF NOT EXISTS cash_3pr_pii.afterpay.feb_de_applications LIKE cash_3pr_pii.afterpay.feb_de_applications_daily;
+
+/*
+ Merges monthly report into the historical table, if the unique_transaction_id doesn't exist in the historical table, it will insert it.
+ If the application_id exists in the historical table, but any of the fields have changed, it will insert an additional row with the new data.
+ PK for the historical table is application_id, report_generated_date
+ */
+-- Step 1: Insert non-existing rows
+INSERT INTO cash_3pr_pii.afterpay.feb_de_applications
+SELECT DISTINCT source.*
+FROM cash_3pr_pii.afterpay.feb_de_applications_daily source
+WHERE NOT EXISTS
+      (
+          SELECT 1
+          FROM cash_3pr_pii.afterpay.feb_de_applications target
+          WHERE target.application_id = source.application_id
+          );
+
+-- Step 2: Insert changed rows
+INSERT INTO cash_3pr_pii.afterpay.feb_de_applications
+SELECT DISTINCT source.*
+FROM cash_3pr_pii.afterpay.feb_de_applications_daily    source
+         JOIN cash_3pr_pii.afterpay.feb_de_applications target
+              ON source.application_id = target.application_id AND source.report_generated_date > target.report_generated_date
+WHERE (
+          source.partner_id <> target.partner_id OR
+              source.loan_account_number <> target.loan_account_number OR
+              source.customer_id <> target.customer_id OR
+              source.first_name <> target.first_name OR
+              source.last_name <> target.last_name OR
+              source.ssn_or_fedid <> target.ssn_or_fedid OR
+              source.date_of_birth <> target.date_of_birth OR
+              source.street_address1 <> target.street_address1 OR
+              source.street_address2 <> target.street_address2 OR
+              source.city <> target.city OR
+              source.state <> target.state OR
+              source.zipcode_plus_four <> target.zipcode_plus_four OR
+              source.ability_to_pay_measurement_value <> target.ability_to_pay_measurement_value OR
+              source.ability_to_pay_result <> target.ability_to_pay_result OR
+              source.active_duty_flag <> target.active_duty_flag OR
+              source.address_discrepancy_alert <> target.address_discrepancy_alert OR
+              source.adverse_action_notice_date <> target.adverse_action_notice_date OR
+              source.adverse_action_reason_1 <> target.adverse_action_reason_1 OR
+              source.adverse_action_reason_2 <> target.adverse_action_reason_2 OR
+              source.adverse_action_reason_3 <> target.adverse_action_reason_3 OR
+          );
+Databases
+Worksheets
+Search
+Ask Copilot
+
+Sorted by Viewed descending
