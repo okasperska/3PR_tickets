@@ -51,7 +51,7 @@ SELECT
 --4 Total Value of all increases
 with base as
 (
-select a.consumer_uuid, a.old_value, a.new_value, (a.new_value - a.old_value ) as increase_amt
+select a.consumer_uuid, a.old_value, a.new_value, b.created_date acc_created_date, (a.new_value - a.old_value ) as increase_amt
 from ap_raw_green.green.raw_c_e_rulesenginekarma_decision_value_change a
 join ap_raw_green.green.d_consumer b
 on a.consumer_uuid = b.uuid
@@ -60,9 +60,9 @@ and b.country_code in ('NZ')
 and to_date(convert_timezone('UTC', 'Pacific/Auckland', TO_TIMESTAMP_LTZ(a.TIMESTAMP / 1000)))  between '2024-04-01' and '2025-03-31'
 and a.old_value < a.new_value
 and a.change_type = 'LIMIT'
+
 )
 
 select sum(increase_amt)from base
     WHERE acc_created_date <= '2025-03-31'
-    and country_code = 'NZ'
-    GROUP BY 1
+
