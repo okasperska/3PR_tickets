@@ -326,7 +326,7 @@ CREATE OR REPLACE TABLE PERSONAL_OKASPERSKA.public.EV_APPLICATION_CRD AS
                         FROM ap_raw_green.green.raw_c_e_idv_instant_id a
                                  JOIN base                             b
                                       ON a.key_consumer_uuid = b.consumer_uuid
-                        WHERE idv_date <= application_datetime
+                        WHERE CAST(CONVERT_TIMEZONE('UTC', 'America/Los_Angeles', a.event_info_event_time) AS TIMESTAMP) <= CAST(CONVERT_TIMEZONE('UTC', 'America/Los_Angeles', b.key_event_info_event_time) AS TIMESTAMP)
                         UNION
                         SELECT base.order_token ---sometimes consumer gets verified on a different token, information is not fed to generic table and it causes misses therefore we need any verification from CL table
                              , consumer_consumer_uuid
