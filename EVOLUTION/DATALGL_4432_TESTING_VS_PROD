@@ -1,0 +1,559 @@
+-- 1. Minimal Compliance Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.PASSED_MINIMAL_COMPLIANCE_CRITERIA as varchar) as test,
+cast(mqf.MIN_COMPLICANCE as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 2. Established Relationship Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.ESTABLISHED_RELATIONSHIP as varchar) as test,
+cast(mqf.ESTABLISHED_AP as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 3. Max Late Days Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.MAX_LATE_DAYS as varchar) as test,
+cast(mqf.C_DAY_LATE_PYMT_MAX_CNT_180D_V2 as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 4. Number of Orders Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.NUM_ORDERS_180D as varchar) as test,
+cast(mqf.C_ORDER_CNT_180D_V2 as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 5. Months Since Recent Bankruptcy Filed Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.MONTHS_SINCE_RECENT_BANKRUPTCY_FILED as varchar) as test,
+cast(mqf.P13_ALL9220 as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 6. Total Inquiries 30D Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.TOTAL_INQUIRIES_30D as varchar) as test,
+cast(mqf.P13_IQT9423 as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 7. Tenure Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.TENURE as varchar) as test,
+cast(mqf.C_TENURE as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 8. Total Open Trades Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.TOTAL_OPEN_TRADES as varchar) as test,
+cast(mqf.P13_ALL0400 as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 9. Months Since Oldest Trade Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.MONTHS_SINCE_OLDEST_TRADE as varchar) as test,
+cast(mqf.P13_ALL8220 as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 10. Trades 30D Plus Delinquent Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.TRADES_30D_PLUS_DELINQ as varchar) as test,
+cast(mqf.P13_ALL2184 as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null
+
+-- 11. Months Since Recent Non-Medical Collection Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.MONTHS_SINCE_RECENT_NON_MEDICAL_COLLECTION as varchar) as test,
+cast(mqf.P13_COL8192 as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 12. Max Balance to Credit Ratio Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.MAX_BALANCE_TO_CREDIT_RATIO as varchar) as test,
+cast(mqf.P13_ALL7120 as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 13. Active Loan 3M Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.ACTIVE_LOAN_3M as varchar) as test,
+cast(mqf.ACTIVE_CL_LOAN_IN_3MO as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 14. Number of Loans Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.NUM_LOANS as varchar) as test,
+cast(mqf.NUM_CL_ACTIVE_ORDERS as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 15. Last Order Date Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.LAST_ORDER_DATE as varchar) as test,
+cast(mqf.LAST_ORDER_DATE as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 16. Base Layer APR Term 6 Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.BASE_LAYER_APR_TERM_6 as varchar) as test,
+cast(mqf.BASE_LAYERTERM6 as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 17. Base Layer APR Term 12 Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.BASE_LAYER_APR_TERM_12 as varchar) as test,
+cast(mqf.BASE_LAYERTERM12_APR as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 18. Velocity Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.VELOCITY as varchar) as test,
+cast(mqf.VELOCITY as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 19. Risk Exposure Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.RISK_EXPOSURE as varchar) as test,
+cast(mqf.RISK_EXPOSURE_CAP as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 20. BP Number of Installment with Payment Decline Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.BP_C_NBR_OF_INSTALMENT_WITH_PAYMENT_DECLINE_RT_D180 as varchar) as test,
+cast(mqf.BP_C_NBR_OF_INSTALMENT_WITH_PAYMENT_DECLINE_RT_D180 as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null
+
+-- 21. BP Number of Days Since Latest NSF Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.BP_C_NBR_OF_DAYS_SINCE_LATEST_NSF as varchar) as test,
+cast(mqf.BP_C_NBR_OF_DAYS_SINCE_LATEST_NSF as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 22. Experian No Hit Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.EXPERIAN_NO_HIT as varchar) as test,
+cast(mqf.EXPERIAN_CREDIT_CHECK_DETAILS_IS_CREDIT_CHECK_HIT as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 23. Deceased Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.DECEASED as varchar) as test,
+cast(mqf.EXPERIAN_CREDIT_CHECK_DETAILS_IS_DECEASED as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 24. Active Bankruptcy Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.ACTIVE_BANKRUPTCY as varchar) as test,
+cast(mqf.EXPERIAN_CREDIT_CHECK_DETAILS_IS_BANKRUPTCY as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 25. Decline Reason Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.DECLINE_REASON as varchar) as test,
+cast(mqf.DECLINE_MAIN_REASON as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 26. Vantage V3 Score Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.VANTAGE_V3_SCORE as varchar) as test,
+cast(mqf.VANTAGE_V3_SCORE as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 27. Segment Prime Near Prime Subprime Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.SEGMENT_PRIME_NEAR_PRIME_SUBPRIME as varchar) as test,
+cast(mqf.RISK_SEGMENT as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 28. CVI Score Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.CVI_SCORE as varchar) as test,
+cast(mqf.IDV_SCORE as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 29. Risk Indicator Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.RISK_INDICATOR as varchar) as test,
+cast(mqf.RISK_INDICATORS as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 30. Afterpay Risk Model Score Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.AFTERPAY_RISK_MODEL_SCORE as varchar) as test,
+cast(mqf.EC1_SCORE as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 31. Downpayment Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.DOWNPAYMENT as varchar) as test,
+cast(mqf.DOWNPAYMENT_1 as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 32. Base Layer APR Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.BASE_LAYER_APR as varchar) as test,
+cast(mqf.BASELAYERAPR as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 33. Strategy Version Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.STRATEGY_VERSION as varchar) as test,
+cast(mqf.CREDIT_STRATEGY_VERSION as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 34. CL Total Outstanding Principal Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.CL_TOTAL_OUTSTANDING_PRINCIPAL as varchar) as test,
+cast(mqf.CL_TOTAL_OSTD_PRINCIPAL as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
+
+-- 35. AP Internal Score Check
+with base as (
+select
+tst.application_id,
+SPLIT_PART(tst.application_id, '__', 1) as order_token,
+tst.customer_id,
+cast(tst.AP_INTERNAL_SCORE as varchar) as test,
+cast(mqf.AP_INTERNAL_SCORE as varchar) as mqf
+from PERSONAL_OKASPERSKA.public.EV_APPLICATION_TEST tst
+left join AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.MQF_TRANSACTION_TESTING  mqf
+on order_token = mqf.application_id
+and tst.decline_main_reason = mqf.decline_main_reason
+and mqf.application_date = '2025-04-01'
+)
+select * from base where test<>mqf --or mqf is null;
