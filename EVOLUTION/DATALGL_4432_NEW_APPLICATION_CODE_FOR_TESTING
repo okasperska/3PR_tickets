@@ -174,10 +174,10 @@ CREATE OR REPLACE TABLE  PERSONAL_OKASPERSKA.public.EV_APPLICATION_IDV AS
          , 'N/A'                                                                   AS BASE_LAYER_APR_TERM_6
          , 'N/A'                                                                   AS BASE_LAYER_APR_TERM_12
          , 'N/A'                                                                   AS VELOCITY
-         , 'N/A'                                                                   AS SEGMENT_PRIME_NEAR_PRIME_SUBPRIME
+         , 'N/A'                                                                   AS RISK_SEGMENT
          , 'N/A'                                                                   AS RISK_EXPOSURE
-         , 'N/A'                                                                   AS bp_c_nbr_of_instalment_with_payment_decline_rt_d180
-         , 'N/A'                                                                   AS bp_c_nbr_of_days_since_latest_nsf
+         , 'N/A'                                                                   AS BP_C_NBR_OF_INSTALMENT_WITH_PAYMENT_DECLINE_RT_D180
+         , 'N/A'                                                                   AS BP_C_NBR_OF_DAYS_SINCE_LATEST_NSF
          , 'N/A'                                                                   AS EXPERIAN_NO_HIT
          , 'N/A'                                                                   AS DECEASED
          , 'N/A'                                                                   AS ACTIVE_BANKRUPTCY
@@ -618,7 +618,7 @@ CREATE OR REPLACE TABLE PERSONAL_OKASPERSKA.public.EV_APPLICATION_CRD AS
                                             (bureau.experian_credit_check_details_is_credit_check_hit is null) or
                                               bureau.p13_all0400 =0 or  bureau.p13_all0400 >90
                                                 or bureau.p13_all8220 <= 6 or bureau.p13_all8220 > 9990) then 'limited bureau info'
-                                            when (bureau.vantage_v3_score >= 670 and vantage_v3_score <= 850 and
+                                            when (bureau.vantage_v3_score >= 670 and bureau.vantage_v3_score <= 850 and
                                             bureau.experian_credit_check_details_is_credit_check_hit = true and
                                             bureau.p13_all0400 > 0 and bureau.p13_all0400 <= 90 and
                                             bureau.p13_all8220 > 6 and bureau.p13_all8220 <= 9990) then 'Prime'
@@ -626,15 +626,15 @@ CREATE OR REPLACE TABLE PERSONAL_OKASPERSKA.public.EV_APPLICATION_CRD AS
                                               bureau.experian_credit_check_details_is_credit_check_hit = true and
                                               bureau.p13_all0400 > 0 and bureau.p13_all0400 <= 90 and
                                               bureau.p13_all8220 > 6 and bureau.p13_all8220 <= 9990) then 'Near Prime'
-                                            when (bureau.vantage_v3_score >= 560 and vantage_v3_score < 600 and
+                                            when (bureau.vantage_v3_score >= 560 and bureau.vantage_v3_score < 600 and
                                               bureau.experian_credit_check_details_is_credit_check_hit = true and
                                               bureau.p13_all0400 > 0 and bureau.p13_all0400 <= 90 and
                                               bureau.p13_all8220 > 6 and bureau.p13_all8220 <= 9990) then 'Subprime'
-                                            when (bureau.vantage_v3_score >= 500 and vantage_v3_score < 560 and
+                                            when (bureau.vantage_v3_score >= 500 and bureau.vantage_v3_score < 560 and
                                               bureau.experian_credit_check_details_is_credit_check_hit = true and
                                               bureau.p13_all0400 > 0 and bureau.p13_all0400 <= 90 and
                                               bureau.p13_all8220 > 6 and bureau.p13_all8220 <= 9990) then 'Deep SubPrime' else null end
-                                            else  null end as varchar)                                                                                             AS SEGMENT_PRIME_NEAR_PRIME_SUBPRIME
+                                            else  null end as varchar)                                                                                             AS RISK_SEGMENT
          ,  cast(case
                                               when bureau.vantage_v3_score >= 670 and bureau.vantage_v3_score <= 850 and base.c_tenure <=60 then
                                         		   case
