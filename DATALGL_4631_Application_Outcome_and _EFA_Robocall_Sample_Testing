@@ -1,0 +1,161 @@
+with BASE as --- taken straight from project evolution code
+(
+select order_token, 
+consumer_uuid,
+convert_timezone('UTC','America/Los_Angeles', key_event_info_event_time) application_datetime,
+decision_status,
+decline_main_reason,
+decline_main_sub_reason,
+cast(convert_timezone('UTC','America/Los_Angeles',dateadd('MS',created_date,'1970-01-01')) as date) as created_time,  
+to_date(convert_timezone('UTC','America/Los_Angeles',key_event_info_event_time)) application_date,
+ROW_NUMBER()OVER(PARTITION BY  consumer_uuid, created_time, merchant_id, decline_main_reason ORDER BY  KEY_EVENT_INFO_EVENT_TIME desc) as rnk --dedupping based on rules used in MQF prior to Q1 2025 to avoid confusion
+-- ROW_NUMBER()OVER(PARTITION BY  order_token, consumer_uuid, decline_main_sub_reason ORDER BY  KEY_EVENT_INFO_EVENT_TIME asc) as rnk -- project evolution dedupping method
+FROM AP_CUR_CRDRISK_G.CURATED_CREDIT_RISK_GREEN.consumer_lending_decision
+where country_code = 'US'
+--and to_date(convert_timezone('UTC','America/Los_Angeles',key_event_info_event_time)) between '2025-02-01' and '2025-04-30'
+and order_token in 
+('002.104sa8mmpeaes3fdhn258ae7fmssqjfbav11qns0khj1ki98',
+'002.1llsnr58439vu0d9hueqb6d1ieehmtnm1l3butl035lq2h1p',
+'002.23140d4evrgt4no71nqtup1ihaucm6qehcromgdmv84fnmi7',
+'002.2dkbk8rdj4k10cj0b052uu0fpjfvrefqod0ractb666teboj',
+'002.2hqqd0p341p5kvp1gf0mjiu0k0gvt9a9tvomc10iej4e7ub2',
+'002.2uud53bm2oiont6l9in7hppnbujshfn8cbtu7bkhla918a0d',
+'002.3796snth5e8kv30uugq56e51k79pjgs5lgp742p889r4175',
+'002.3hk1onhrbv470q9o353ait6plg37hq8ttog71l5d0g8fe7ib',
+'002.3n3rfh6u7gfmfi9ekn2fani66vqcjrc94msqb1eu9sm0u0np',
+'002.3tvihq6neondbhqtdmtocn9e6voni2p192ent25snlfst28b',
+'002.4df2bdt1cr2k73vlbt151c7jb9j5tvjokahg1sv2q0rs94g0',
+'002.4la5qn3fp3tiql4m8vqnlf6uutel3joh4hbttup0sf5c9af2',
+'002.4uhm68gpdvge4q73i93k9r7n16tnibgb0dsu79q6m2dlgc07',
+'002.5cu9brmc0juujut5sf6q45tnpe98ba9e31dh1v1o7609knqc',
+'002.5rmiadtjriav1kqbj1a8hn8ku1lfd12ru6e6flrjr0p894kr',
+'002.62ltqokbian3v6rfkooa2j5cica0knba87lpje01517rfa88',
+'002.69bll69nnja65dam8nim63qcm3a75jk39tu2est16g5jihoj',
+'002.6clk05sjbvthkt2g137k73k0m1k2d912b3ndt6plqpdilfeg',
+'002.6g8vhehn1rc70voqmffq1u07c2imr0np8c49qutuib5k2f1p',
+'002.6r0bdrm9fccfsgvsuhnvpkpaiefrnggfrv8v0lk7dat622g3',
+'002.7b86bn5ebscgk2lne26nusn175o8k753j9rt1mscfd923sn5',
+'002.7bg3j1a48pnc2kta8b6r7a7gahiqmri0j7i89v2ijb1411vd',
+'002.7k045jq6dqeipmvc30gol1uro7u5ivvmpb0p4g4k5isvtu15',
+'002.805l5cttnitcd8nrbsj6j6h49ntt9gr32hqh98jkej7lsbk2',
+'002.82uh6libd89ihl0al7nda45lvcf0t2i1gc5foffer0rp9h06',
+'002.845l1f4l73utp7uumecdl1v1joded53l3et5kqi8dojj25t8',
+'002.8887u1jq4p8viu2qmt4i2en045pgid9nolbcsgtbne0f53h3',
+'002.8cgg9opmmc1jnnrr5jkgrpcnt2snp02ohnkkon5mf0i971tq',
+'002.8e7q8om40cv4rc1ef7setim54finc20rpav50nsermkf9gj2',
+'002.8u89ooi0pabem6qdctvb2h3sassm5o815bhmo4576di70kok',
+'002.93h6vo4uggensp9t1ktakg180mjap3iu5ooa0gs7gpret2fu',
+'002.9k23ic7k60m7v93k5apb40f5btqq6anlor4j6phd9kktt8v2',
+'002.9nuu9a4hs3jjpe4pn2dt7932pv3p4j4j63v1g8hmd54kq5mn',
+'002.a88k4gh1hpejas710cddqqvufl2t47rop8gvcgmm2mrlbcvp',
+'002.aehmv5o1tomuvlcd04t5sepkmolk0jnf3mulcdrp1oi1f4k5',
+'002.ao5ro7a0lqsotsfhi0fvfr1q7gtipj0gi06pb0kan4e8oudp',
+'002.aq8gah34706q4bio3h25iefi0d6iergqdhbjlsc371uho8af',
+'002.bfg25q9m2v5s366ad7vt0i2edjc8tda5gat1linr1ono3d47',
+'002.bghofsnn8ppq86d7rn85rdlfdr29mgs9dc7vuo717oa7of6l',
+'002.bhe1vid5dosv84mea17g10cv3v4ntaupvcmr25jfafdnntf6',
+'002.bkrq5d66e740aglssr17o11hvujfnjpeo58oua5cbi6f7h68',
+'002.blqrph5p49364809dto2ve9co4c2f0u74nimd1uj2nmivd2c',
+'002.bv1u8u8aoc5p7gci4d1rmdjbbe3un105adnl69phqp0iej9o',
+'002.c9iqvi4fs4efa61744njvb5oralo36qge8o2pte9672t3paj',
+'002.cq3ngjpi6cd8phardvfcav1c30f502u2460e4laj9962qese',
+'002.d6vcevcb8e075i7ktdvp8u0k0kdaurvbjr637nlmls2idhc',
+'002.ducart7jj6ba0h2kk5cpbad9bopggrhvnb8rqn1vs0d0pdm2',
+'002.eu7ufkrfn4j3hbjo7quncaf99d3e13e5d08bb0uur4vkuppb',
+'002.fout0kcg329pg3gmc05qjsgqqkejkbrlh0cc01dln93prkmj',
+'002.fs61f1amqjuc65jd0iq0gokun0st3t7bt3fpqrg0tj9ahgau',
+'002.g056fgpidhbl9c5gnr8qs0v9qmvl9pelnmdvc7b0dm8o0jhn',
+'002.garcefb2q4cmnfeptdgpken1mapefsstnk2ssn8kset38imc',
+'002.gfjus96j2nhpn8i9eolsg6rdcq8oran9ghqvqlg87s1psu20',
+'002.gim4l91v9clrfusv1u42soirsromtc2ccsdb226hia1mah0',
+'002.go9uk29rm858ifae8boe1ggfii2dmrll86ggru5p6fu8ura0',
+'002.grlqhp292jojhp8k2ltf5k26onglsoplird8g6a5vk73h91d',
+'002.ht09vpdrca7c7kf6uv8k2b8fstlkj4g8ptv05nlhe7q3pkj9',
+'002.hvmj1ddh1delu0p3te824tpe6qops8te5i695r8k49trp8lf',
+'002.i1o66g9o9mh4i3mklhu7b21abhnj9o0ujvd34hndqjs6pi6u',
+'002.illq4nqujkj36fs00cron0g3gk24iktq9itd6klaimahsphu',
+'002.jorjdt12dg2n76348020jclio7dhrh7jqtucn385hfg7skod',
+'002.kf7gpb55pcnunsgomualna48t4b5giqfbs0fb1ebqtn24uha',
+'002.kila3hq7gkuhitv1n85s8f0lo4hbm17fcecocvsoatfnjpd2',
+'002.lc23j3l1ot9r2j4e84k44doa05rrucueu8jrcdhfc586l354',
+'002.lus8sk1enbmv1u16ebkalecs9dklbmmsmevqh71a3u7i06q8',
+'002.mlpjbj13datj1gsa474ji6ose2q2ksptddo7h8jpcbqmc2o3',
+'002.mnf1t8q16cm2on4uph3dd0c7239pdqp6th4f0l2su51q0v1h',
+'002.moc016k071m8nuijurcnh9allkqcpgrssgtplpo7q1ecqn6s',
+'002.n27er2d6aunpscovb7ljud9jk0v9gmar0q86mlpuqhih8vcn',
+'002.n3vlakr7flq712nlrd60ocdo452r9mpl26839h5n5mjgbgo8',
+'002.nlk5k7h90adrmkrgkk2lr17d7ie52t879penl0tf4r200f40',
+'002.nmr8a0vtcfo2trb7745g5hjst28q5fu1jttq708mudi1c481',
+'002.o33mhvcn4phvcii5i9g1meksip1b5dbo0l97vakd5j6u0hc8',
+'002.o5u75ck6imv58o8lj9kd8k296bhmia8sud240cc00vnr3oc7',
+'002.oplhmffvoq12mnskk6u5apk77ig6idohllecoo5e9thup8tb',
+'002.pfnjbhprf2tkkevkp4uchff7ahpqtd0va6pp2ctqo8vklla8',
+'002.plbm55e45s4nhio61s7cr76hkh4i6u61gcqe5v7qpr0577ge',
+'002.ppb2rv29ummahdvdvk297iof9gni4cbs9lkmo50l1f16lur7',
+'002.q3f4eqar3auvi4pnljir5ngm71oshbg96l4evr7tpil2u8s',
+'002.qb427m0k64gavu475f0fassko423jc00gh7qn132pii7i7ib',
+'002.qfcg8t0t4hnhj3igu54jo9s0u8en46mbvqrdtkjqdp5lmm0m',
+'002.rkm3obhc4ip82coh5ovmi9hfej87ede8a1r4rpnd2g5ou5dv',
+'002.rl9i9s6vrgcslqkn5avlhtuockq5jrfvto2floeseg2mgcc0',
+'002.s0ccikq1orlcaqdfgi69qr45vkpl5s1o42c6gd0pdssbi68k',
+'002.s0dje85cch4j9g3oked1idoo4949gema23f41ep51v0j7qcn',
+'002.s4u4dp9o9b0bfoui57soq379fmonv7ju3gssjppslb8u3p41',
+'002.s6g0lpktlp3tf4t9hgd2pcf3pjuo6m4cs58eplee2ddicqdl',
+'002.sovverof1mnluvol67tqg40e6jfc96simc2obtv5jte7ine9',
+'002.sp16mocplrlmig6ibd2ghav7d98tc8f2sol4pmkbm7ig1469',
+'002.st33e087gbmrtn40qtjjq0lgutjmdimdjkfsn68u2f0mfkkf',
+'002.t4msraq5m481sbkcfku9mi9vtr8llnk8cdmb1vlv49659gs8',
+'002.ta4ip1rlimbavdl2q3a2qddlh15feh3tobn7vdfd7st86qsu',
+'002.tr7lr9d7fm3trmpdgadsr7lte77qv7qejkas75e0dpfepfea',
+'002.u3q3eigdvje5oqf3kgm35kpjf97sq3plbf9eaailkgnb9mk1',
+'002.v4akvd7p2r9fddotsruruaunnf6npds7a1hsfgrlqsd60kke',
+'002.vc801e1cg1fk2c2q9hbla5g5ll35v2s3l2kvlgm556mkc7k7',
+'002.vfsno1jm56lpnu5n3294uo6gvh7b9g7n039a0p6s3b31cira',
+'002.vic325fq67iia1a07lqu81dkg9c59hahm1rk9ghvc2q3q8vv',
+'002.vnj6lkb8igmm57sh16pnlfrouco6uajheou58dnmsi5otfhb'
+)
+            
+--qualify ROW_NUMBER()OVER(PARTITION BY  consumer_uuid, created_time, merchant_id, decline_main_reason ORDER BY  KEY_EVENT_INFO_EVENT_TIME desc) = 1 --dedupping based on rules used in MQF prior to Q1 2025 to avoid confusion
+--qualify ROW_NUMBER()OVER(PARTITION BY  order_token, consumer_uuid, decline_main_sub_reason ORDER BY  KEY_EVENT_INFO_EVENT_TIME asc) = 1 -- project evolution dedupping method
+        
+),
+
+ROBOCALL as
+(select base.order_token, base.consumer_uuid, 
+convert_timezone('UTC','America/Los_Angeles', robo.event_info_event_time) as efa_call_datetime, 
+robo.robocall_result
+from ap_raw_green.green.raw_c_e_consumer_extended_fraud_alert_status robo
+join base
+on base.order_token = robo.order_token and base.consumer_uuid = robo.consumer_consumer_uuid
+where 1=1
+QUALIFY ROW_NUMBER() OVER (PARTITION BY robo.consumer_consumer_uuid, robo.order_token ORDER BY robo.event_info_event_time DESC) = 1
+)
+
+
+select
+c.order_token,
+c.consumer_uuid,
+c.application_datetime,
+c.decision_status,
+c.decline_main_reason,
+c.decline_main_sub_reason,
+rb.efa_call_datetime,
+rb.robocall_result,
+fo.order_transaction_status,
+fo.id order_id,
+fo.payment_type,
+xo.dropout_reason
+from base c
+left join AP_CUR_XOOP_G.PAY_MONTHLY.M_ATM_ATTEMPT_MASTER xo
+     on c.order_token = xo.transaction_token and c.consumer_uuid = xo.uuid and c.rnk = 1
+left join ap_raw_green.green.f_order fo
+     on c.order_token =fo.order_token --and fo.payment_type = 'PCL' -- some attempts may have ended up as a BNPL order
+     and c.decision_status = 'APPROVED'
+left join robocall rb
+     on c.order_token = rb.order_token and c.consumer_uuid = rb.consumer_uuid 
+     --and (c.decision_status = 'APPROVED' or (c.decision_status = 'DECLINED' and rb.robocall_result <> 'VERIFIED'))
+     and (c.decision_status = 'DECLINED' and c.decline_main_reason = 'EXPERIAN_EFA_DECLINE')
+--where c.order_token = '002.c4qtu4rti8ngfck9c4umkm1aj3t1jtvd84etl98aclt9p0a2'
+order by 1,3
+
+
