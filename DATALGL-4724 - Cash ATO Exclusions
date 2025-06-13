@@ -24,7 +24,7 @@ CREATE OR REPLACE TABLE app_cash_3pr.cfpb.pop_dead_end_ato_exclusions AS
             AND NOT (
                         REGEXP_COUNT(reason, '#\\$ATO_RESET_CONFIRMED') > 0 
                         AND REGEXP_COUNT(reason, '#\\$ATO_INV_LATO') > 0   
-                    )
+                    ) ---- this is to address the comment in the spreadsheet to disregard #$ATO_RESET_CONFIRMED if included with #$ATO_INV_LATO
             GROUP BY 1,2,3,4
             )
             
