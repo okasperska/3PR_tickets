@@ -1,8 +1,12 @@
----- create base 2 tables
+/***************************************************
+1. Run the code for  PERSONAL_OKASPERSKA.public.anz_limits_start using the previous month end date in macro_variabled CTE
+2. Run the code for CREATE OR REPLACE table  PERSONAL_OKASPERSKA.public.anz_limits_end using the current month end date in macro_variabled CTE
+3. Run the Summary
+/***************************************************
 
 USE WAREHOUSE ADHOC__XLARGE;
---CREATE OR REPLACE table  PERSONAL_OKASPERSKA.public.anz_limits_start as
-CREATE OR REPLACE table  PERSONAL_OKASPERSKA.public.anz_limits_end as
+CREATE OR REPLACE table  PERSONAL_OKASPERSKA.public.anz_limits_start as
+--CREATE OR REPLACE table  PERSONAL_OKASPERSKA.public.anz_limits_end as
 (
 
 WITH 
@@ -10,8 +14,8 @@ macro_variables as
 (
 SELECT
    
---'2025-02-28' ::DATE as end_dte
-'2025-03-31' ::DATE as end_dte
+'2025-02-28' ::DATE as end_dte -- previous month end date
+--'2025-03-31' ::DATE as end_dte --current month end date
      
 )
 
@@ -146,6 +150,9 @@ case when status_changed_to in ('DEACTIVATED','ACCOUNT_CLOSED') then 'Y'
      else null end as self_exclusion_flag
 FROM STAGING
 );
+
+
+
 ---- SUMMARY
 WITH macro_variables AS (
     SELECT
