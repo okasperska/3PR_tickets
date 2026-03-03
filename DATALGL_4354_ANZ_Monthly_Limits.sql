@@ -2,7 +2,7 @@
 1. Run the code for  PERSONAL_OKASPERSKA.public.anz_limits_start using the previous month end date in macro_variabled CTE
 2. Run the code for CREATE OR REPLACE table  PERSONAL_OKASPERSKA.public.anz_limits_end using the current month end date in macro_variabled CTE
 3. Run the Summary
-/***************************************************
+***************************************************/
 
 USE WAREHOUSE ADHOC__XLARGE;
 CREATE OR REPLACE table  PERSONAL_OKASPERSKA.public.anz_limits_start as
