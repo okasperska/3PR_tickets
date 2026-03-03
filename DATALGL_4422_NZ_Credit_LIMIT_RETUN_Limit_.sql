@@ -75,7 +75,7 @@ select consumer_uuid,
 to_date(convert_timezone('UTC', 'Pacific/Auckland', TO_TIMESTAMP_LTZ(a.TIMESTAMP / 1000))) set_date,
 a.old_value,
 a.new_value,
-ROW_NUMBER () OVER(PARTITION BY  consumer_uuid ORDER BY  set_datetime desc) rnk --rnk=1 means it is the first record per consumer
+ROW_NUMBER () OVER(PARTITION BY  consumer_uuid ORDER BY  set_datetime asc) rnk --rnk=1 means it is the first record per consumer
 from ap_raw_green.green.raw_c_e_rulesenginekarma_decision_value_change a
 join ap_raw_green.green.d_consumer b
 on a.consumer_uuid = b.uuid
